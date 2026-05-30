@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Ultimate Full PC Builder & Power Analyzer</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 30px;
+            margin: 0;
+        }
+
+        .top-bar {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .budget-selector, .fps-tester {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            flex: 1;
+        }
+
+        .budget-selector h2, .fps-tester h2 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #fff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .budget-input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+
+        .budget-input {
+            background-color: #222;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            padding: 10px;
+            font-size: 16px;
+            flex: 1;
+            outline: none;
+        }
+        .budget-input:focus { border-color: #2563eb; }
+
+        .btn-build {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-build:hover { background-color: #059669; }
+
+        .build-result {
+            font-size: 13px;
+            color: #a0a0a0;
+            margin: 6px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .build-result strong { color: #fff; }
+
+        .lucky-block {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            background-color: #1e293b;
+            border-left: 4px solid #3b82f6;
+            color: #93c5fd;
+            display: none;
+        }
+
+        .power-warning {
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            background-color: #451a1a;
+            border-left: 4px solid #f87171;
+            color: #fca5a5;
+            display: none;
+        }
+
+        .total-price {
+            font-size: 16px;
+            color: #10b981;
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: right;
+        }
+
+        .btn-test {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+        .btn-test:disabled { background-color: #475569; cursor: not-allowed; }
+
+        .loader-container { margin-top: 15px; display: none; }
+        .loader-status { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; color: #a0a0a0; }
+        .progress-bar-bg { width: 100%; background-color: #222; border: 1px solid #444; height: 12px; border-radius: 20px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #2563eb, #3b82f6); }
+
+        .fps-results {
+            display: none;
+            margin-top: 15px;
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .fps-results th, .fps-results td { border: 1px solid #333; padding: 8px; text-align: center; }
+        .fps-results th { background-color: #222; color: #fff; }
+
+        /* ПЛАВНАЯ АНИМАЦИЯ РАСШИРЕНИЯ РАМОК ПРИ НАВЕДЕНИИ */
+        .catalog {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .card {
+            background-color: #1e1e1e;
+            border-radius: 12px;
+            padding: 15px;
+            width: 230px;
+            /* Плавный переход для трансформации ширины и цвета */
+            transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s ease, border-color 0.25s ease;
+            border: 1px solid #333;
+            height: fit-content;
+            box-sizing: border-box;
+        }
+        
+        /* Расширение при наведении на ЛЮБУЮ карточку */
+        .card:hover { 
+            width: 320px; 
+            background-color: #252525; 
+            border-color: #555;
+        }
+        
+        /* Когда карточка активно раскрыта */
+        .card.expanded { 
+            width: 540px !important; 
+            border-color: #64748b; 
+        }
+
+        .hidden-list { list-style: none; padding: 0; margin: 10px 0 0 0; opacity: 0; visibility: hidden; height: 0; overflow: hidden; transition: opacity 0.2s ease; }
+        .card:hover .hidden-list { opacity: 1; visibility: visible; height: auto; }
+
+        .item-btn {
+            padding: 8px;
+            border-bottom: 1px solid #333;
+            font-size: 13px;
+            color: #a0a0a0;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+        .item-btn:hover { color: #fff; background-color: #333; }
+        .item-btn.active { color: #fff; background-color: #475569; }
+
+        .info-panel { display: none; opacity: 0; margin-top: 15px; padding-top: 15px; border-top: 1px solid #444; }
+        .info-panel.show { display: block; opacity: 1; }
+        .info-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .price { color: #10b981; margin-bottom: 5px; font-size: 14px;}
+        .pros-cons { display: flex; gap: 15px; font-size: 12px; }
+        .pros { color: #34d399; width: 50%; } .cons { color: #f87171; width: 50%; }
+        .pros p, .cons p { margin: 2px 0; }
+        
+        /* УВЕЛИЧЕННАЯ КНОПКА ОК */
+        .close-btn { 
+            background-color: #2563eb; 
+            color: white; 
+            border: none; 
+            padding: 8px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 13px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .close-btn:hover { background-color: #1d4ed8; }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="budget-selector">
+        <h2>Конфигуратор полного цикла</h2>
+        <div class="budget-input-wrapper">
+            <input type="number" class="budget-input" id="budgetInput" placeholder="Введите бюджет на ПК (руб.)" value="45000">
+            <button class="btn-build" onclick="buildByBudget()">Собрать ПК</button>
+        </div>
+        <div class="build-result"><span>CPU:</span> <strong id="b-cpu">Не выбран</strong></div>
+        <div class="build-result"><span>GPU:</span> <strong id="b-gpu">Не выбрана</strong></div>
+        <div class="build-result"><span>RAM:</span> <strong id="b-ram">Не выбрана</strong></div>
+        <div class="build-result"><span>Блок питания:</span> <strong id="b-psu">Не выбран</strong></div>
+        
+        <div class="lucky-block" id="luckyBlock"></div>
+        <div class="power-warning" id="powerWarning"></div>
+        
+        <div class="total-price" id="totalPrice">Цена сборки: 0 руб.</div>
+    </div>
+
+    <div class="fps-tester">
+        <h2>Бенчмарк системы</h2>
+        <button class="btn-test" id="btnTest" onclick="startFpsTest()" disabled>Запустить тесты FPS</button>
+        
+        <div class="loader-container" id="loaderContainer">
+            <div class="loader-status"><span>Стресс-тест GPU/CPU...</span><span id="loadPercent">0%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBarFill"></div></div>
+        </div>
+
+        <table class="fps-results" id="fpsTable">
+            <thead><tr><th>Игра</th><th>Низкие</th><th>Средние</th><th>Высокие</th></tr></thead>
+            <tbody id="fpsTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="catalog">
+    <div class="card" id="cpuCard">
+        <h3>1. CPU (Процессоры)</h3>
+        <ul class="hidden-list" id="cpuList"></ul>
+        <div class="info-panel" id="cpuInfoPanel">
+            <div class="info-header"><strong id="cpuName"></strong><button class="close-btn" onclick="closeSpecs('cpu', event)">ОК</button></div>
+            <div class="price" id="cpuPrice"></div>
+            <div style="font-size: 12px; margin-bottom:10px; color: #b0b0b0;" id="cpuSpecs"></div>
+            <div class="pros-cons"><div class="pros"><strong>+</strong><div id="cpuPros"></div></div><div class="cons"><strong>-</strong><div id="cpuCons"></div></div></div>
+        </div>
+    </div>
+
+    <div class="card" id="gpuCard">
+        <h3>2. GPU (Видеокарты)</h3>
+        <ul class="hidden-list" id="gpuList"></ul>
+        <div class="info-panel" id="gpuInfoPanel">
+            <div class="info-header"><strong id="gpuName"></strong><button class="close-btn" onclick="closeSpecs('gpu', event)">ОК</button></div>
+            <div class="price" id="gpuPrice"></div>
+            <div style="font-size: 12px; margin-bottom:10px; color: #b0b0b0;" id="gpuSpecs"></div>
+            <div class="pros-cons"><div class="pros"><strong>+</strong><div id="gpuPros"></div></div><div class="cons"><strong>-</strong><div id="gpuCons"></div></div></div>
+        </div>
+    </div>
+
+    <div class="card" id="ramCard">
+        <h3>3. RAM (Память)</h3>
+        <ul class="hidden-list" id="ramList"></ul>
+        <div class="info-panel" id="ramInfoPanel">
+            <div class="info-header"><strong id="ramName"></strong><button class="close-btn" onclick="closeSpecs('ram', event)">ОК</button></div>
+            <div class="price" id="ramPrice"></div>
+            <div style="font-size: 12px; margin-bottom:10px; color: #b0b0b0;" id="ramSpecs"></div>
+            <div class="pros-cons"><div class="pros"><strong>+</strong><div id="ramPros"></div></div><div class="cons"><strong>-</strong><div id="ramCons"></div></div></div>
+        </div>
+    </div>
+
+    <div class="card" id="psuCard">
+        <h3>4. PSU (Блоки питания)</h3>
+        <ul class="hidden-list" id="psuList"></ul>
+        <div class="info-panel" id="psuInfoPanel">
+            <div class="info-header"><strong id="psuName"></strong><button class="close-btn" onclick="closeSpecs('psu', event)">ОК</button></div>
+            <div class="price" id="psuPrice"></div>
+            <div style="font-size: 12px; margin-bottom:10px; color: #b0b0b0;" id="psuSpecs"></div>
+            <div class="pros-cons"><div class="pros"><strong>+</strong><div id="psuPros"></div></div><div class="cons"><strong>-</strong><div id="psuCons"></div></div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const db = {
+        cpu: {
+            r5_5600: { id: 'r5_5600', name: "AMD Ryzen 5 5600", price: 9500, costStr: "~9 500 руб.", specs: "6 ядер / 12 потоков | TDP: 65W", pros: ["Отличный кэш L3", "Высокий FPS в киберспорте"], cons: ["Нужна плата AM4"], tier: 3, tdp: 65, fpsMod: 1.15 },
+            i3: { id: 'i3', name: "Core i3 12100F", price: 7500, costStr: "~7 500 руб.", specs: "4 ядра / 8 потоков | TDP: 60W", pros: ["Сильный однопоток", "Апгрейд на 13/14 поление"], cons: ["Всего 4 ядра"], tier: 2, tdp: 60, fpsMod: 1.08 },
+            r5_4500: { id: 'r5_4500', name: "AMD Ryzen 5 4500", price: 5500, costStr: "~5 500 руб.", specs: "6 ядер / 12 потоков | TDP: 65W", pros: ["Доступный AM4 чип", "Холодный"], cons: ["Урезанный кэш"], tier: 2, tdp: 65, fpsMod: 1.0 },
+            xeon: { id: 'xeon', name: "Xeon E5 2667 v3", price: 2500, costStr: "~2 500 руб.", specs: "8 ядер / 16 потоков | TDP: 135W", pros: ["Смешная цена", "Многозадачность"], cons: ["Высокое потребление", "Старый сокет"], tier: 2, tdp: 135, fpsMod: 1.0 }
+        },
+        gpu: {
+            rx6700: { id: 'rx6700', name: "Radeon RX 6700", price: 28000, costStr: "~28 000 руб.", specs: "10 GB GDDR6 | TDP: 175W", pros: ["10GB памяти с запасом", "Архитектура RDNA2"], cons: ["Плохо с трассировкой"], tier: 4, tdp: 175, games: { minecraft: [1400, 950, 700], beamng: [160, 115, 85], cs2: [380, 290, 210], rust: [140, 110, 85] } },
+            rtx3060: { id: 'rtx3060', name: "GeForce RTX 3060", price: 27000, costStr: "~27 000 руб.", specs: "12 GB GDDR6 | TDP: 170W", pros: ["12GB памяти", "Стабильный DLSS"], cons: ["Дороже, чем чистая мощь RX"], tier: 3, tdp: 170, games: { minecraft: [1200, 850, 650], beamng: [140, 100, 75], cs2: [350, 260, 190], rust: [130, 100, 75] } },
+            rx5700xt: { id: 'rx5700xt', name: "Radeon RX 5700 XT", price: 16500, costStr: "15-18 тыс. руб.", specs: "8 GB GDDR6 | TDP: 225W", pros: ["Широкая шина 256-bit", "Дешево на б/у"], cons: ["Сильный нагрев", "Нет лучей"], tier: 3, tdp: 225, games: { minecraft: [1050, 700, 500], beamng: [110, 70, 45], cs2: [260, 190, 140], rust: [95, 75, 55] } },
+            rtx2060: { id: 'rtx2060', name: "GeForce RTX 2060", price: 15000, costStr: "~15 000 руб.", specs: "6 GB GDDR6 | TDP: 160W", pros: ["Поддержка DLSS", "Надежная работа"], cons: ["6GB впритык"], tier: 2, tdp: 160, games: { minecraft: [800, 600, 450], beamng: [90, 65, 45], cs2: [200, 150, 110], rust: [80, 65, 45] } },
+            gtx1650super: { id: 'gtx1650super', name: "GeForce GTX 1650 Super", price: 7000, costStr: "~7 000 руб.", specs: "4 GB GDDR6 | TDP: 100W", pros: ["Тихая, холодная", "Низкая цена"], cons: ["4GB душат текстуры"], tier: 1, tdp: 100, games: { minecraft: [700, 550, 400], beamng: [65, 45, 30], cs2: [160, 120, 85], rust: [90, 60, 25] } }
+        },
+        ram: {
+            ddr4_32gb: { id: 'ddr4_32gb', name: "32GB DDR4 (2x16GB) 3600MHz", price: 26699, costStr: "~26 699 руб.", specs: "Для игровых топ-систем", pros: ["Огромный объем", "Высокая частота 3600"], cons: ["Высокая цена"], tier: 3 },
+            ddr4_16gb: { id: 'ddr4_16gb', name: "16GB DDR4 (2x8GB) 3200MHz", price: 14900, costStr: "~14 900 руб.", specs: "Стандарт для домашних ПК", pros: ["Оптимально для игр", "Двухканал"], cons: ["Для тяжелого софта впритык"], tier: 2 },
+            ecc_reg_16gb: { id: 'ecc_reg_16gb', name: "16GB DDR4 ECC REG Серверная", price: 12900, costStr: "~12 900 руб.", specs: "Только под системы Xeon", pros: ["Серверная отказоустойчивость"], cons: ["Не заведется на Ryzen"], tier: 1 }
+        },
+        psu: {
+            psu_500w: { id: 'psu_500w', name: "Блок питания 500W Бюджет", price: 2500, costStr: "~2 500 руб.", specs: "Лимит по 12V: 400W", pros: ["Дешевизна"], cons: ["Плохой кабель-менеджмент"], power: 400 },
+            psu_700w: { id: 'psu_700w', name: "Блок питания 700W Certified", price: 4500, costStr: "~4 500 руб.", specs: "Лимит по 12V: 640W", pros: ["Огромный запас мощности"], cons: ["Немного шумный"], power: 640 }
+        }
+    };
+
+    let selected = { cpu: null, gpu: null, ram: null, psu: null };
+
+    function renderCatalog() {
+        const renderGroup = (type, targetId) => {
+            const container = document.getElementById(targetId); container.innerHTML = '';
+            for (let id in db[type]) { container.innerHTML += `<li class="item-btn" id="btn-${id}" onclick="selectComponent('${type}', '${id}')">${db[type][id].name}</li>`; }
+        };
+        renderGroup('cpu', 'cpuList'); renderGroup('gpu', 'gpuList'); renderGroup('ram', 'ramList'); renderGroup('psu', 'psuList');
+    }
+
+    function selectComponent(type, id) {
+        const item = db[type][id];
+        document.querySelectorAll(`#${type}Card .item-btn`).forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-${id}`).classList.add('active');
+        document.getElementById(`${type}Card`).classList.add('expanded');
+
+        document.getElementById(`${type}Name`).innerText = item.name;
+        document.getElementById(`${type}Price`).innerText = "Цена: " + item.costStr;
+        document.getElementById(`${type}Specs`).innerText = item.specs;
+        document.getElementById(`${type}Pros`).innerHTML = item.pros.map(p => `<p>• ${p}</p>`).join('');
+        document.getElementById(`${type}Cons`).innerHTML = item.cons.map(c => `<p>• ${c}</p>`).join('');
+
+        selected[type] = item;
+        document.getElementById(`b-${type}`).innerText = item.name;
+        
+        updateTotalAndUI();
+        setTimeout(() => { document.getElementById(`${type}InfoPanel`).classList.add('show'); }, 120);
+    }
+
+    function closeSpecs(type, event) {
+        if (event) event.stopPropagation();
+        document.getElementById(`${type}Card`).classList.remove('expanded');
+        document.getElementById(`${type}InfoPanel`).classList.remove('show');
+        document.querySelectorAll(`#${type}Card .item-btn`).forEach(i => i.classList.remove('active'));
+    }
+
+    function updateTotalAndUI() {
+        let price = 0;
+        for(let key in selected) { if(selected[key]) price += selected[key].price; }
+        document.getElementById('totalPrice').innerText = `Цена сборки: ${price.toLocaleString()} руб.`;
+        document.getElementById('btnTest').disabled = !(selected.cpu && selected.gpu && selected.ram && selected.psu);
+        
+        analyzePower();
+    }
+
+    function analyzePower() {
+        const warnBlock = document.getElementById('powerWarning');
+        if (!selected.cpu || !selected.gpu || !selected.psu) { warnBlock.style.display = 'none'; return; }
+
+        const totalTdp = selected.cpu.tdp + selected.gpu.tdp + 80;
+        const realPsuPower = selected.psu.power;
+
+        if (totalTdp > realPsuPower) {
+            warnBlock.innerHTML = `💥 <b>Критическая перегрузка БП!</b> Система жрет около ${totalTdp}W, БП выдает ${realPsuPower}W. Срочно смените БП на 700W.`;
+            warnBlock.style.display = 'block';
+        } else if (realPsuPower - totalTdp < 60) {
+            warnBlock.innerHTML = `⚠️ <b>Блок питания впритык!</b> Запас прочности всего ${(realPsuPower - totalTdp)}W. Будет выть.`;
+            warnBlock.style.display = 'block';
+        } else {
+            warnBlock.style.display = 'none';
+        }
+    }
+
+    function buildByBudget() {
+        const budget = parseInt(document.getElementById('budgetInput').value) || 0;
+        let bestCombo = null;
+        let maxSpent = 0;
+
+        for (let cKey in db.cpu) {
+            for (let gKey in db.gpu) {
+                for (let rKey in db.ram) {
+                    for (let pKey in db.psu) {
+                        if (cKey === 'xeon' && rKey !== 'ecc_reg_16gb') continue;
+                        if (cKey !== 'xeon' && rKey === 'ecc_reg_16gb') continue;
+
+                        let cost = db.cpu[cKey].price + db.gpu[gKey].price + db.ram[rKey].price + db.psu[pKey].price;
+                        
+                        if (cost <= budget && cost > maxSpent) {
+                            if (Math.abs(db.cpu[cKey].tier - db.gpu[gKey].tier) <= 2) {
+                                maxSpent = cost;
+                                bestCombo = { cpu: cKey, gpu: gKey, ram: rKey, psu: pKey };
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!bestCombo) { alert("Мало денег! Не хватает на базовый конфиг."); return; }
+
+        selectComponent('cpu', bestCombo.cpu);
+        selectComponent('gpu', bestCombo.gpu);
+        selectComponent('ram', bestCombo.ram);
+        selectComponent('psu', bestCombo.psu);
+
+        let luckyMsg = "";
+        let currentCost = maxSpent;
+        
+        for (let gKey in db.gpu) {
+            if (db.gpu[gKey].price > db.gpu[bestCombo.gpu].price) {
+                let extra = (currentCost - db.gpu[bestCombo.gpu].price + db.gpu[gKey].price) - budget;
+                if (extra > 0 && extra <= 3500) {
+                    luckyMsg = `💡 <b>Если повезет на Авито:</b> докиньте ${extra} руб. и заберите <b>${db.gpu[gKey].name}</b>!`;
+                    break;
+                }
+            }
+        }
+
+        const luckyBlock = document.getElementById('luckyBlock');
+        if (luckyMsg) { luckyBlock.innerHTML = luckyMsg; luckyBlock.style.display = 'block'; } 
+        else { luckyBlock.style.display = 'none'; }
+    }
+
+    function startFpsTest() {
+        const btn = document.getElementById('btnTest'); const loader = document.getElementById('loaderContainer');
+        const barFill = document.getElementById('progressBarFill'); const percentText = document.getElementById('loadPercent');
+        const table = document.getElementById('fpsTable');
+
+        btn.disabled = true; table.style.display = 'none'; loader.style.display = 'block'; barFill.style.width = '0%'; percentText.innerText = '0%';
+
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 5; barFill.style.width = progress + '%'; percentText.innerText = progress + '%';
+            if (progress >= 100) {
+                clearInterval(interval);
+                setTimeout(() => { loader.style.display = 'none'; btn.disabled = false; calculateAndShowFps(); }, 150);
+            }
+        }, 200 / 10);
+    }
+
+    function calculateAndShowFps() {
+        let cpuModifier = selected.cpu.fpsMod;
+        if (selected.gpu.id === 'gtx1650super' && selected.cpu.id === 'xeon') cpuModifier = 0.95;
+        if (selected.gpu.id === 'rx5700xt' && selected.cpu.id === 'r5_4500') cpuModifier = 0.90;
+
+        const tbody = document.getElementById('fpsTableBody'); tbody.innerHTML = '';
+
+        for (let game in selected.gpu.games) {
+            const low = Math.round(selected.gpu.games[game][0] * cpuModifier);
+            const med = Math.round(selected.gpu.games[game][1] * cpuModifier);
+            const high = Math.round(selected.gpu.games[game][2] * cpuModifier);
+
+            const lowStr = (low >= 700) ? `${low}+ FPS` : `${low} FPS`;
+            const medStr = `${med} FPS`;
+            const highStr = (high < 50 && selected.gpu.id === 'rx5700xt') ? "менее 50 FPS" : `${high} FPS`;
+
+            let displayGameName = game.charAt(0).toUpperCase() + game.slice(1);
+            if (game === 'beamng') displayGameName = 'BeamNG.drive';
+            if (game === 'cs2') displayGameName = 'CS2';
+
+            tbody.innerHTML += `<tr>
+                <td style="font-weight: bold; color: #fff;">${displayGameName}</td>
+                <td style="color: #34d399;">${lowStr}</td>
+                <td style="color: #ffb703;">${medStr}</td>
+                <td style="color: #f87171;">${highStr}</td>
+            </tr>`;
+        }
+        document.getElementById('fpsTable').style.display = 'table';
+    }
+
+    renderCatalog();
+</script>
+</body>
+</html>
