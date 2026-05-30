@@ -26,7 +26,7 @@ def parse_price(component_id, url):
             
             # Пытаемся найти тег с ценой. 
             # ВНИМАНИЕ: Если ты используешь реальные ссылки, проверь через F12 класс цены на сайте!
-            price_tag = soup.find("span", class_="current-price")
+            <span class="js__actualPrice">11 789 ₽</span>
             
             if price_tag:
                 clean_price = "".join(filter(str.isdigit, price_tag.text))
