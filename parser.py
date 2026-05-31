@@ -26,7 +26,7 @@ def parse_price(component_id, url):
             
             # Пытаемся найти тег с ценой. 
             # ВНИМАНИЕ: Если ты используешь реальные ссылки, проверь через F12 класс цены на сайте!
-            <span>34&nbsp;200&nbsp;₽</span>
+            <div class="price-block__price _WAIT"><span>34&nbsp;200&nbsp;₽</span></div>
             
             if price_tag:
                 clean_price = "".join(filter(str.isdigit, price_tag.text))
