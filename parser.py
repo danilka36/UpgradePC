@@ -5,10 +5,10 @@ import time
 import random
 
 LINKS = {
-    "r5_5600": "https://example-store.ru/product/amd-ryzen-5-5600",
+    "r5_5600": "https://barnaul.e2e4online.ru/catalog/item/protsessor-amd-ryzen-5-5600-tray-oem-1106340/",
     "xeon": "https://example-store.ru/product/xeon-e5-2667-v3",
     "rx5700xt": "https://example-store.ru/product/radeon-rx-5700-xt",
-    "rtx3060": "https://example-store.ru/product/geforce-rtx-3060"
+    "rtx3060": "https://barnaul.e2e4online.ru/catalog/item/videokarta-cbr-nvidia-geforce-rtx-3060-12gb-gddr6-1359227/"
 }
 
 HEADERS = {
@@ -26,7 +26,7 @@ def parse_price(component_id, url):
             
             # Пытаемся найти тег с ценой. 
             # ВНИМАНИЕ: Если ты используешь реальные ссылки, проверь через F12 класс цены на сайте!
-            <span class="js__actualPrice">11 789 ₽</span>
+            <span>34&nbsp;200&nbsp;₽</span>
             
             if price_tag:
                 clean_price = "".join(filter(str.isdigit, price_tag.text))
